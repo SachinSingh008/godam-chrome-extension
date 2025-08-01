@@ -123,7 +123,7 @@ const Player = () => {
             }
         } else if (godamToken && isExpired) {
             token = await refreshToken();
-            if (!newToken) {
+            if (!token) {
                 throw new Error("GoDAM sign-in failed");
             }
         } else {
