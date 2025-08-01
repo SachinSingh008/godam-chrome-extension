@@ -219,12 +219,10 @@ const Player = () => {
             <PlayerNav />
             <div className={styles.content}>
                 <div className={styles.leftPanel}>
-                    {isSaving && (
                         <div className={styles.saving}>
                             <div className={styles.savingSpinner}></div>
                             <p className={styles.savingText}>Hold tight! We're setting up your video...</p>
                         </div>
-                    )}
                     <Content />
                 </div>
             </div>
