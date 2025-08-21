@@ -1,6 +1,5 @@
 # GoDAM Screen Recorder
-[Chrome Extension banner image]
-
+<img width="1280" height="800" alt="Image 1" src="https://github.com/user-attachments/assets/93b0ef91-8b5c-4acb-ac44-94415c3cc7f4" />
 
 The free and privacy-friendly screen recorder with no limits 🎥
 
