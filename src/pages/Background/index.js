@@ -1898,3 +1898,17 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         return true;
     }
 });
+
+// Listen for cookie changes on https://app.godam.io domain and logout from extension if user logout from application.
+chrome.cookies.onChanged.addListener(async (changeInfo) => {
+    const baseUrl = process.env.GODAM_BASE_URL || 'https://app.godam.io';
+    const domain = new URL(baseUrl).hostname; // Extract the domain part
+
+    const { cookie } = changeInfo;
+
+    if (!cookie.domain.includes(domain)) return;
+
+    if ( (cookie.name === "sid" || cookie.name === "user_id") && cookie.value === "Guest"  ) {
+        await chrome.storage.local.remove(["godamToken", "godamRefreshToken", "godamTokenExpiration"]);
+    }
+});
