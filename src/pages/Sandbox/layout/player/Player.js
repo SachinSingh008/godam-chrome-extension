@@ -134,8 +134,14 @@ const Player = () => {
     };
 
     const saveToGoDAM = async () => {
+
         const blob = contentState.rawBlob;
         const token = await getGoDAMAuthToken()
+        const { selectedOrg } = await chrome.storage.local.get(["selectedOrg"]);
+
+        if(!selectedOrg){
+            throw new Error("unknown org");
+        }
 
         let fileName = `GoDAM video - ${new Date().toLocaleString("en-US", {
             month: "short",
@@ -160,6 +166,7 @@ const Player = () => {
                 method: "POST",
                 headers: {
                     Authorization: `Bearer ${token}`,
+                    Organization: selectedOrg
                 },
                 body: formData,
             }
@@ -177,6 +184,10 @@ const Player = () => {
         }
 
         const responseData = await uploadResponse.json();
+
+        if (!responseData?.file_informations?.name){
+            throw new Error(responseData.file_informations.error)
+        }
 
         const videoName = responseData?.file_informations?.name;
         const baseURL = process.env.GODAM_BASE_URL || 'https://app.godam.io';
@@ -205,11 +216,13 @@ const Player = () => {
         if (!isSaving) {
             (async()=>{
 
-            const url = await saveToGoDAM();
-            setIsSaving(true);
+                const url = await saveToGoDAM();
+                setIsSaving(true);
+                if (url){
+                    const currentTab = await chrome.tabs.getCurrent();
+                    chrome.tabs.update(currentTab.id, { url });
+                }
 
-            const currentTab = await chrome.tabs.getCurrent();
-                chrome.tabs.update(currentTab.id, { url });
             })()
         }
     }, [])
