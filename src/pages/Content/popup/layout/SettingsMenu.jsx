@@ -138,7 +138,7 @@ const SettingsMenu = (props) => {
                 // Download file
                 const a = document.createElement("a");
                 a.href = url;
-                a.download = "screenity-troubleshooting.zip";
+                a.download = "godam-troubleshooting.zip";
                 a.click();
                 window.URL.revokeObjectURL(url);
 
@@ -157,6 +157,18 @@ const SettingsMenu = (props) => {
     setWidth(Math.round(window.screen.width * window.devicePixelRatio));
     setHeight(Math.round(window.screen.height * window.devicePixelRatio));
   }, []);
+
+  const handleGoDAMSignOut = async (e) => {
+    e.preventDefault();
+                
+    // Close the dropdown.
+    props.setOpen(false);
+
+    const result = await chrome.runtime.sendMessage({ type: "sign-out-godam" });
+    if ( result.status && result.status === 'success' ) {
+      window.location.reload();
+    }          
+  }
 
   return (
     <DropdownMenu.Root
@@ -627,14 +639,7 @@ const SettingsMenu = (props) => {
           {godamToken && (
             <DropdownMenu.Item
               className="DropdownMenuItem"
-              onSelect={(e) => {
-                e.preventDefault();
-                chrome.runtime.sendMessage({ type: "sign-out-godam" });
-                // Close the dropdown
-                props.setOpen(false);
-                // Refresh the page
-                window.location.reload();
-              }}
+              onSelect={handleGoDAMSignOut}
             >
               <span style={{ marginRight: "8px" }}>
                 {chrome.i18n.getMessage("signOutGoDAMLabel")}
