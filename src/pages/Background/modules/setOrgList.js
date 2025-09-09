@@ -1,12 +1,10 @@
-const ROLES_ALLOWED_TO_UPLOAD = ["owner", "manager", "creator"]
+import getGoDAMAuthToken from "./getGoDAMAuthToken";
 
 const setOrgList = async () => {
-    const { godamToken } = await chrome.storage.local.get(["godamToken"]);
-    if (!godamToken) {
-        throw new Error('Auth token not found');
-    }
 
-    const baseURL = process.env.GODAM_BASE_URL || 'https://app.godam.io';    
+    const godamToken = await getGoDAMAuthToken();
+
+    const baseURL = process.env.GODAM_BASE_URL || 'https://app.godam.io';
 
     const response = await fetch(`${baseURL}/api/method/frappe_organization.api.manage.list_organizations`, {
         method: 'GET',
@@ -23,20 +21,29 @@ const setOrgList = async () => {
 
     const data = await response.json();
 
-    if(!data && !data.message && !Array.isArray(data.message)){
+    if (!data && !data.message && !Array.isArray(data.message)) {
         throw new Error('Got Unexpected data');
-    }else{
-        const filteredOrgList = data.message.filter((org)=> ROLES_ALLOWED_TO_UPLOAD.includes(org.role.toLowerCase()))
-        
-        await chrome.storage.local.set({orgList:JSON.stringify(filteredOrgList)})
-        const { selectedOrg } = await chrome.storage.local.get(["selectedOrg"])
-
-        if (!selectedOrg){
-            await chrome.storage.local.set({selectedOrg:filteredOrgList[0]["organization_name"]})
-        }
-
     }
-    
+
+    if (data.message.length === 0) {
+        await chrome.storage.local.remove(["selectedOrg", "orgList"])
+        return;
+    }
+
+    await chrome.storage.local.set({ orgList: JSON.stringify(data.message) })
+
+    // If there is an Org is already selected dont override that choice.
+    const { selectedOrg } = await chrome.storage.local.get(["selectedOrg"])
+
+    if (selectedOrg){
+        return
+    }
+    // Take the first Non Viewer choice and select it. 
+    const firstNonViewerOrg = data.message.find(org => org.role.toLowerCase() !== "viewer");
+
+    if (firstNonViewerOrg) {
+        await chrome.storage.local.set({ selectedOrg: firstNonViewerOrg["organization_name"] });
+    }
 };
 
 export default setOrgList;

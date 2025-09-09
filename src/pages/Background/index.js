@@ -1653,8 +1653,10 @@ const handleSaveToGoDAM = async (sendResponse, request, fallback = false) => {
 
 const handleSignInGoDAM = async (sendResponse) => {
     const signInGoDAM = require('./modules/signInGoDAM').default;
+    const setOrgList = require('./modules/setOrgList').default;
 
     const token = await signInGoDAM();
+    await setOrgList();
 
     if (token) {
         sendResponse({ status: "ok", token: token });
@@ -1899,6 +1901,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     } else if (request.type === "set-organizations") {
         const setOrgs = require('./modules/setOrgList').default;
         setOrgs();
+        return true;
+    } else if (request.type === "get-organisations") {
+        const getOrgList = require('./modules/getOrgList').default;
+        getOrgList(sendResponse);
         return true;
     }
 });
