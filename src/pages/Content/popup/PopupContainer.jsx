@@ -65,7 +65,7 @@ const PopupContainer = (props) => {
             // User is connected to no orgs
             setShowNotice(true);
             setNoticeMessage("")
-            setNoticeBtnText("Create your own Organization")
+            setNoticeBtnText("Get Your GoDAM Pro")
             setNoticeBtnUrl(`${baseUrl}/web/billing?tab=Plans&ref=createOrg`)
 
         } else if (orgList && Array.isArray(orgList) && orgList.filter(({ role }) => role.toLowerCase() !== "viewer").length === 0) {
