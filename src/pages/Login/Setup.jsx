@@ -9,25 +9,21 @@ const Setup = () => {
   const [loading, setLoading] = useState(false);
   const [loaderProgress, setLoaderProgress] = useState(100);
 
+  /**
+   * Check if user is logged in to GoDAM, if already logged in redirect to playground
+   */
+  const checkLogin = async () => {
+      // Check if user is logged in to GoDAM
+      const { godamToken } = await chrome.storage.local.get(["godamToken"]);
+    
+      if (godamToken) {
+        // Redirect to playground page if user is logged in
+        window.location.href = chrome.runtime.getURL("playground.html");
+      }
+  }
+
   useEffect(() => {
-    // Inject content script
-    const script = document.createElement("script");
-    script.src = chrome.runtime.getURL("contentScript.bundle.js");
-    script.async = true;
-    document.body.appendChild(script);
-
-    // Also inject CSS
-    const style = document.createElement("link");
-    style.rel = "stylesheet";
-    style.type = "text/css";
-    style.href = chrome.runtime.getURL("assets/fonts/fonts.css");
-    document.body.appendChild(style);
-
-    // Return
-    return () => {
-      document.body.removeChild(script);
-      document.body.removeChild(style);
-    };
+    checkLogin();
   }, []);
 
   useEffect(() => {
@@ -70,6 +66,9 @@ const Setup = () => {
 
               // Close the current window
               window.close();
+            } else {
+              // If no previous tab ID is found, redirect to the default page
+              window.location.href = chrome.runtime.getURL("playground.html");
             }
           });
         }, 3000);

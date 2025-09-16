@@ -1583,14 +1583,14 @@ const checkAvailableMemory = (sendResponse) => {
 };
 
 // Add this function to handle sign out from GoDAM
-const handleSignOutGoDAM = async () => {
+const handleSignOutGoDAM = async (sendResponse) => {
     const { godamToken } = await chrome.storage.local.get(["godamToken"]);
+    let revokeToken = false;
     if (godamToken) {
         // Revoke token on the server
         const baseUrl = process.env.GODAM_BASE_URL || 'https://app.godam.io';
 
         try {
-
             await fetch(`${baseUrl}/api/method/frappe.integrations.oauth2.revoke_token`, {
                 method: 'POST',
                 headers: {
@@ -1601,17 +1601,22 @@ const handleSignOutGoDAM = async () => {
                     token: godamToken
                 }),
             });
+
+            revokeToken = true;
         } catch (error) {
+            revokeToken = false;
             console.error("Error revoking GoDAM token:", error);
+        } finally {
+            await chrome.storage.local.remove([
+                'godamToken',
+                'godamRefreshToken',
+                'godamTokenExpiration'
+            ]);
+            return sendResponse({status: 'success', revokeToken});
         }
     }
 
-    // Clear token from storage
-    chrome.storage.local.set({
-        godamToken: null,
-        godamRefreshToken: null,
-        godamTokenExpiration: null
-    });
+
 };
 
 // Function to handle saving to GoDAM
@@ -1653,8 +1658,10 @@ const handleSaveToGoDAM = async (sendResponse, request, fallback = false) => {
 
 const handleSignInGoDAM = async (sendResponse) => {
     const signInGoDAM = require('./modules/signInGoDAM').default;
+    const setOrgList = require('./modules/setOrgList').default;
 
     const token = await signInGoDAM();
+    await setOrgList();
 
     if (token) {
         sendResponse({ status: "ok", token: token });
@@ -1899,6 +1906,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     } else if (request.type === "set-organizations") {
         const setOrgs = require('./modules/setOrgList').default;
         setOrgs();
+        return true;
+    } else if (request.type === "get-organisations") {
+        const getOrgList = require('./modules/getOrgList').default;
+        getOrgList(sendResponse);
         return true;
     }
 });
